@@ -1,17 +1,18 @@
-const Thing = require('../models/thing');
+const fs = require('fs');
+const Books = require('../models/Books');
 
-exports.createThing = (req, res, next) => {
-  const thingObject = JSON.parse(req.body.thing);
-  delete thingObject._id;
-  delete thingObject._userId;
-  const fs = require('fs');
-  const thing = new Thing({
-      ...thingObject,
+exports.createBooks = (req, res, next) => {
+  const booksObject = JSON.parse(req.body.books);
+  delete booksObject._id;
+  delete booksObject._userId;
+
+  const books = new Books({
+      ...booksObject,
       userId: req.auth.userId,
       imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
   });
 
-  thing.save()
+  books.save()
   .then(() => { res.status(201).json({
         message: 'Post saved successfully!'
       });
@@ -23,19 +24,27 @@ exports.createThing = (req, res, next) => {
   );
 };
 
-exports.modifyThing = (req, res, next) => {
-  const thingObject = req.file ? {
-      ...JSON.parse(req.body.thing),
+
+exports.getOneBooks = (req, res, next) => {
+  Books.findOne({ _id: req.params.id })
+    .then(books => res.status(200).json(books))
+    .catch(error => res.status(404).json({ error }));
+};
+
+
+exports.modifyBooks = (req, res, next) => {
+  const booksObject = req.file ? {
+      ...JSON.parse(req.body.books),
       imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
   } : { ...req.body };
 
-  delete thingObject._userId;
-  Thing.findOne({_id: req.params.id})
-      .then((thing) => {
-          if (thing.userId != req.auth.userId) {
+  delete booksObject._userId;
+  Books.findOne({_id: req.params.id})
+      .then((books) => {
+          if (books.userId != req.auth.userId) {
               res.status(401).json({ message : 'Not authorized'});
           } else {
-              Thing.updateOne({ _id: req.params.id}, { ...thingObject, _id: req.params.id})
+              Books.updateOne({ _id: req.params.id}, { ...booksObject, _id: req.params.id})
               .then(() => res.status(200).json({message : 'Objet modifié!'}))
               .catch(error => res.status(401).json({ error }));
           }
@@ -46,15 +55,15 @@ exports.modifyThing = (req, res, next) => {
 };
   
 
-exports.deleteThing = (req, res, next) => {
-  Thing.findOne({ _id: req.params.id})
-      .then(thing => {
-          if (thing.userId != req.auth.userId) {
+exports.deleteBooks = (req, res, next) => {
+  Books.findOne({ _id: req.params.id})
+      .then(books => {
+          if (books.userId != req.auth.userId) {
               res.status(401).json({message: 'Not authorized'});
           } else {
-              const filename = thing.imageUrl.split('/images/')[1];
+              const filename = books.imageUrl.split('/images/')[1];
               fs.unlink(`images/${filename}`, () => {
-                  Thing.deleteOne({_id: req.params.id})
+                  Books.deleteOne({_id: req.params.id})
                       .then(() => { res.status(200).json({message: 'Objet supprimé !'})})
                       .catch(error => res.status(401).json({ error }));
               });
@@ -66,10 +75,10 @@ exports.deleteThing = (req, res, next) => {
 };
   
 
-  exports.getAllStuff = (req, res, next) => {
-    Thing.find().then(
-      (things) => {
-        res.status(200).json(things);
+  exports.getAllBooks = (req, res, next) => {
+    Books.find().then(
+      (books) => {
+        res.status(200).json(books);
       }
     ).catch(
       (error) => {

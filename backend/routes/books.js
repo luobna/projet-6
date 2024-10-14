@@ -6,11 +6,11 @@ const booksCtrl = require('../controllers/books');
 
 
 
+router.get('/bestrating', booksCtrl.getbestratingBooks);
 router.get('/', booksCtrl.getAllBooks);
 router.post('/',auth,  multer, booksCtrl.createBooks);
-router.post('/:id/rating ',  auth, booksCtrl.ratingBooks);
-router.get('/:id', auth,  booksCtrl.getOneBooks);
-//router.get('/bestrating', auth,  booksCtrl.getbestratingBooks);
+router.post('/:id/rating', auth, booksCtrl.ratingBooks);
+router.get('/:id', booksCtrl.getOneBooks);
 router.put('/:id', auth, multer, booksCtrl.modifyBooks);
 router.delete('/:id', auth, booksCtrl.deleteBooks);
 
